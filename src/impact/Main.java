@@ -46,12 +46,20 @@ public class Main {
 							return;
 						}
 						else {
+							Resources.dbName = "test";
+							Resources.repository = values[0];
+							Resources.branch = "master";
+							Resources.configFile = "/home/jordan/config.txt";
+							
 							// Connect to the database
 							DatabaseConnector db = new DatabaseConnector();
 							db.connect("impact");
 							db.createDatabase("test");
+							
 							// Run the daemon starting from here
 							System.out.println("Using repository: " + values[0]);
+							Daemon dae = new Daemon(db);
+							dae.run();
 							
 							db.close();
 						}

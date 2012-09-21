@@ -13,6 +13,8 @@ import db.util.ISetter.IntSetter;
 import db.util.PreparedStatementExecutionItem;
 import db.util.ISetter.StringSetter;
 
+import impact.Resources;
+
 public class DatabaseConnector extends DbConnection {
 	
 	public void createDatabase(String dbName) {
@@ -253,5 +255,52 @@ public class DatabaseConnector extends DbConnection {
 			params.add(param);
 		}
 		return params;
+	}
+	
+	/**
+	 * This function returns the commit ID that the database
+	 * call graph currently represents.
+	 * @return
+	 */
+	public String getCurrentCommit() {
+		try {
+			String query = "SELECT commit_id FROM properties WHERE repository=?";
+			ISetter[] params = {
+					new StringSetter(1,Resources.repository)
+			};
+
+			PreparedStatementExecutionItem eifirst = new PreparedStatementExecutionItem(query, params);
+			addExecutionItem(eifirst);
+			eifirst.waitUntilExecuted();
+			ResultSet rs = eifirst.getResult();
+
+			if(rs.next())
+				return rs.getString("commit_id");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public void updateProperties(String commit_id) {
+		String query = "INSERT INTO properties (repository, commit_id) VALUES " +
+				"(?, ?)";
+		ISetter[] params = {
+				new StringSetter(1,Resources.repository),
+				new StringSetter(2,commit_id)
+		};
+
+		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
+		addExecutionItem(ei);
+		ei.waitUntilExecuted();
+	}
+	
+	public void deleteProperties() {
+		String query = "DELETE FROM properties";
+		ISetter[] params = {};
+		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
+		addExecutionItem(ei);
+		ei.waitUntilExecuted();
 	}
 }

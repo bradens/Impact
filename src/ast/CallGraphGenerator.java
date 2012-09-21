@@ -24,9 +24,8 @@ public class CallGraphGenerator
 	 * @param commitID
 	 */
 	public void createCallGraphAtCommit(String commitID) {
-		// Set the repo to the commit
-		gc.reset(commitID);
-
+		db.updateProperties(commitID);
+		
 		// Set up the config file
 		FolderTraverser traversal = new FolderTraverser(new File(Resources.repository));
 		traversal.traverse();
