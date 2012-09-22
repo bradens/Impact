@@ -29,14 +29,22 @@ public class Main {
 				
 				Option config = OptionBuilder.withArgName("c").create("c");
 				
+				Option email = OptionBuilder.withArgName("e").create("e");
+				Option tweet = OptionBuilder.withArgName("t").create("t");
+				
 				options.addOption(daemon);
 				options.addOption(repo);
 				options.addOption(config);
+				options.addOption(email);
+				options.addOption(tweet);
 				
 				CommandLine line = parser.parse(options,  args);
 				
 				if(line.hasOption("d") && !line.hasOption("c")) {
 					System.out.println("Running Impact in daemon mode.");
+					
+					Resources.email = line.hasOption("e");
+					Resources.tweet = line.hasOption("t");
 					
 					if(line.hasOption("r")) {
 						String[] values = line.getOptionValues("r");

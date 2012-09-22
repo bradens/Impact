@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.LockSupport;
 
+import messaging.MessageCenter;
 import models.Changeset;
+import models.Message;
 import models.Method;
 import models.Owner;
 import models.Pair;
@@ -60,6 +62,15 @@ public class Daemon {
 						List<Pair<Method, Owner>> owners = blameCaller(caller);
 						for(Pair<Method, Owner> owner: owners) {
 							// Do something here with actual messaging
+							Message message = new Message(owner.getSecond().getEmail(), "Me", 
+									"Changed a function that impacted yours.", 
+									changedMethod.getFirst().toString(), 
+									owner.getFirst().toString());
+							MessageCenter mc = new MessageCenter();
+							if(Resources.email)
+								mc.sendAsEmail(message);
+							if(Resources.tweet)
+								mc.sendAsTweet(message);
 						}
 					}
 				}
