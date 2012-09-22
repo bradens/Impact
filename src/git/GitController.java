@@ -76,6 +76,17 @@ public class GitController {
 		}
 		return spawner.spawnProcess(javaFiles);
 	}
+	
+	public String getDiffJavaOnly(List<String> javaFiles) {
+		if(javaFiles.isEmpty())
+			return "";
+		else {
+			javaFiles.add(0, "--");
+			javaFiles.add(0, "diff");
+			javaFiles.add(0, "git");
+		}
+		return spawner.spawnProcess(javaFiles);
+	}
 
 	public String getAuthorOfCommit(String commit) {
 		return spawner.spawnProcess(new String[] {"git", "show", "-s", "--format=%ce", commit})

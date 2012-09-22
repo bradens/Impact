@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import models.Method;
+import models.Pair;
 
 import db.util.ISetter;
 import db.util.ISetter.IntSetter;
@@ -302,5 +303,60 @@ public class DatabaseConnector extends DbConnection {
 		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
 		addExecutionItem(ei);
 		ei.waitUntilExecuted();
+	}
+	
+	/**
+	 * This method will return all methods inside a given file that overlap
+	 * with the given start and end line numbers with a percent of overlap.
+	 * @param file
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	public List<Pair<Method, Float>> getChangedMethods(String file, int start, int end) {
+		List<Pair<Method, Float>> changedMethods = new ArrayList<Pair<Method, Float>>();
+
+		try 
+		{
+			// Get intersecting methods
+			String sql = "SELECT * FROM methods WHERE file_name=? AND start_line < ? AND ? < end_line"; 
+
+			ISetter[] params = {
+					new StringSetter(1, file),
+					new IntSetter(2, end),
+					new IntSetter(3, start)
+			};
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+			ResultSet rs = ei.getResult();
+			while(rs.next()) {
+				// Create method with fake weight
+				Pair<Method, Float> pair = new Pair<Method, Float>(
+						new Method(rs.getString("file_name"), rs.getString("package_name"), rs.getString("class_type"),
+								rs.getString("method_name"), 
+								convertParametersToList((String[])rs.getArray("parameters").getArray()), 
+								rs.getInt("start_line"), rs.getInt("end_line"), rs.getInt("id")), 0.0f);
+				// Set real weight
+				pair.setSecond((Math.min(end, pair.getFirst().getEnd()) - 
+						Math.max(start, pair.getFirst().getStart()) + 1)/
+						(float)(pair.getFirst().getEnd() - pair.getFirst().getStart() + 1));
+				if((Math.min(end, pair.getFirst().getEnd()) - 
+						Math.max(start, pair.getFirst().getStart()) + 1)/
+						(float)(pair.getFirst().getEnd() - pair.getFirst().getStart() + 1) > 1.0f) {
+					int x = 0;
+					x = x + x;
+				}
+
+				// Add new pair to list
+				changedMethods.add(pair);
+			}
+		}
+		catch(SQLException e) 
+		{
+			e.printStackTrace();
+		}
+
+		return changedMethods;
 	}
 }

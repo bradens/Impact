@@ -33,5 +33,13 @@ public class Resources extends db.Resources {
 	// Git blame regex
 	//71a4479b (<jordan.ell7@gmail.com> 2012-07-18 15:08:52 -0700   3) import java.io.
 	public static final String gitBlame = "\\<(.+?)\\>";
+	
+	// Daemon
+	public static final float fps = 0.1f;
+	
+	// Ownership thresholds
+	public static final float O_LOW = 0.25f;
+	public static final float O_MED = 0.60f;
+	
 
 }
