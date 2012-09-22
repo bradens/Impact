@@ -67,3 +67,10 @@ CREATE TABLE properties (
 );
 
 ------------
+
+CREATE TABLE users (
+    email character varying(255),
+    twitter character varying(255),
+    twitter_accesstoken character varying(255),
+    twitter_accesstokensecret character varying(255)
+);

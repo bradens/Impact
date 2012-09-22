@@ -45,7 +45,7 @@ public class Main {
 				
 				if(line.hasOption("d") && !line.hasOption("c")) {
 					if(line.hasOption("u")) {
-						String[] values = line.getOptionValues("r");
+						String[] values = line.getOptionValues("u");
 						if(values.length != 1) {
 							System.out.println("You must specify your git email with the u flag.");
 							return;
@@ -75,11 +75,12 @@ public class Main {
 							Resources.repository = values[0];
 							Resources.branch = "master";
 							Resources.configFile = "/home/jordan/config.txt";
+							setRepositoryName(Resources.repository);
 							
 							// Connect to the database
 							DatabaseConnector db = new DatabaseConnector();
-							db.connect("impact");
-							db.createDatabase("test");
+							db.connect("test");
+							//db.createDatabase("test");
 							
 							// Run the daemon starting from here
 							System.out.println("Using repository: " + values[0]);
@@ -108,6 +109,10 @@ public class Main {
 			printMan();
 		}
 		
+	}
+	
+	private static void setRepositoryName(String path) {
+		Resources.repositoryName = path.substring(path.lastIndexOf("/")+1);
 	}
 	
 	private static void printMan() {

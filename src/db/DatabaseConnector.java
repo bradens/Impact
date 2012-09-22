@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import twitter4j.auth.AccessToken;
+
 import models.Method;
 import models.Pair;
 
@@ -358,5 +360,43 @@ public class DatabaseConnector extends DbConnection {
 		}
 
 		return changedMethods;
+	}
+	
+	public void storeTwitterAccessToken(AccessToken accessToken) {
+		String query = "UPDATE users SET twitter_accesstoken=?, " +
+				"twitter_accesstokensecret=? WHERE email=?";
+		
+		ISetter[] params = {
+				new StringSetter(1,accessToken.getToken()),
+				new StringSetter(2,accessToken.getTokenSecret()),
+				new StringSetter(3,Resources.user)
+		};
+
+		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
+		addExecutionItem(ei);
+		ei.waitUntilExecuted();
+	}
+	
+	public AccessToken getTwitterAccessToken() {
+		try {
+			String query = "SELECT * FROM users WHERE email=?";
+			ISetter[] params = {
+					new StringSetter(1,Resources.user)
+			};
+
+			PreparedStatementExecutionItem eifirst = new PreparedStatementExecutionItem(query, params);
+			addExecutionItem(eifirst);
+			eifirst.waitUntilExecuted();
+			ResultSet rs = eifirst.getResult();
+
+			if(rs.next() && rs.getString("twitter_accesstoken") != null) {
+				return new AccessToken(rs.getString("twitter_accesstoken"), 
+						rs.getString("twitter_accesstokensecret"));
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

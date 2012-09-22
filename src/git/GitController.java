@@ -82,6 +82,7 @@ public class GitController {
 			return "";
 		else {
 			javaFiles.add(0, "--");
+			javaFiles.add(0, "--unified=0");
 			javaFiles.add(0, "diff");
 			javaFiles.add(0, "git");
 		}
