@@ -4,6 +4,7 @@ public class Resources extends db.Resources {
 	// Command line arguments
 	public static boolean email = false;
 	public static boolean tweet = false;
+	public static String user = "";
 	
 	public static String dbName;
 	public static String repository;

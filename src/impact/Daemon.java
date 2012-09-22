@@ -62,7 +62,7 @@ public class Daemon {
 						List<Pair<Method, Owner>> owners = blameCaller(caller);
 						for(Pair<Method, Owner> owner: owners) {
 							// Do something here with actual messaging
-							Message message = new Message(owner.getSecond().getEmail(), "Me", 
+							Message message = new Message(owner.getSecond().getEmail(), Resources.user, 
 									"Changed a function that impacted yours.", 
 									changedMethod.getFirst().toString(), 
 									owner.getFirst().toString());

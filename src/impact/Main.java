@@ -27,6 +27,8 @@ public class Main {
 				Option daemon = OptionBuilder.withArgName("d").create("d");
 				Option repo = OptionBuilder.withArgName("r").hasArg().create("r");
 				
+				Option user = OptionBuilder.withArgName("u").hasArg().create("u");
+				
 				Option config = OptionBuilder.withArgName("c").create("c");
 				
 				Option email = OptionBuilder.withArgName("e").create("e");
@@ -34,6 +36,7 @@ public class Main {
 				
 				options.addOption(daemon);
 				options.addOption(repo);
+				options.addOption(user);
 				options.addOption(config);
 				options.addOption(email);
 				options.addOption(tweet);
@@ -41,6 +44,20 @@ public class Main {
 				CommandLine line = parser.parse(options,  args);
 				
 				if(line.hasOption("d") && !line.hasOption("c")) {
+					if(line.hasOption("u")) {
+						String[] values = line.getOptionValues("r");
+						if(values.length != 1) {
+							System.out.println("You must specify your git email with the u flag.");
+							return;
+						}
+						else {
+							Resources.user = values[0];
+						}
+					}
+					else {
+						System.out.println("Please use the u flag to set your git email for daemon mode.");
+						return;
+					}
 					System.out.println("Running Impact in daemon mode.");
 					
 					Resources.email = line.hasOption("e");
