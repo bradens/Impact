@@ -68,8 +68,40 @@ CREATE TABLE properties (
 
 ------------
 
+CREATE SEQUENCE users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
 CREATE TABLE users (
+    uid integer NOT NULL PRIMARY KEY DEFAULT NEXTVAL('users_id_seq'::regclass),
     email character varying(255),
     twitter character varying(255),
-    twitter_accesstoken character varying(255)
+    twitter_accesstoken character varying(255),
+    twitter_accesstokensecret character varying(255)
 );
+
+ALTER SEQUENCE users_id_seq OWNED BY users.uid;
+
+------------
+
+CREATE SEQUENCE messages_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE messages (
+    mid integer NOT NULL PRIMARY KEY DEFAULT NEXTVAL('messages_id_seq'::regclass),
+    uid_to integer,
+    uid_from integer,
+    m_changed character varying(255),
+    m_impacted character varying(255),
+    weight float,
+    impact_scale character varying(255)
+);
+
+ALTER SEQUENCE messages_id_seq OWNED BY messages.mid;

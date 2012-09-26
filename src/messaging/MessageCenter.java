@@ -25,6 +25,12 @@ import models.Pair;
 
 public class MessageCenter {
 	
+	DatabaseConnector db;
+	
+	public MessageCenter(DatabaseConnector db) {
+		this.db = db;
+	}
+	
 	public void sendAsEmail(Message message) {
 		Properties prop = System.getProperties();
 		prop.setProperty("mail.smtp.host", "localhost");
@@ -57,7 +63,7 @@ public class MessageCenter {
 				Pair<String, String> config = loadTwitterConfig();
 				twitter.setOAuthConsumer(config.getFirst(), config.getSecond());
 			    twitter.setOAuthAccessToken(token);
-			    twitter.updateStatus(generateTweetMessage(message));
+			    //twitter.updateStatus(generateTweetMessage(message));
 			    confirmMessage(message);
 			}
 			catch (Exception e) {
@@ -126,7 +132,7 @@ public class MessageCenter {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             while (null == accessToken)
             {
-                System.out.println("Open the following URL and grant access to your account:");
+                System.out.println("Open the following URL and grant access to your Twitter account:");
                 System.out.println(requestToken.getAuthorizationURL());
                 System.out.print("Enter the PIN(if aviailable) or just hit enter.[PIN]:");
                 String pin = null;
@@ -173,13 +179,15 @@ public class MessageCenter {
 	
 	private String generateTweetMessage(Message message) {
 		String body = "@bradensimpson ";
-		body += message.getImpacted() + " is being effected by change to ";
+		body += message.getImpacted() + " is being effected by ";
 		body += message.getChange();
 		
 		return body;
 	}
 	
 	private void confirmMessage(Message message) {
+		db.insertMessage(message);
+		
 		System.out.println(message.getTo() + " has been alerted because you changed the function " + 
 				message.getChange() + "which effected the function " + message.getImpacted() + " .");
 	}

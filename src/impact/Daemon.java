@@ -32,11 +32,29 @@ public class Daemon {
 		cgg = new CallGraphGenerator(db);
 	}
 	
-	public void run() {
+	public void runClient() {
 		long startTime = 0;
 		
-		// Build the initial call graph on daemon start
-		buildCallGraph();
+		for(;;) {
+			if(startTime ==0)
+				startTime = System.currentTimeMillis();
+			startTime += (1000.0 / Resources.fps);
+			
+			//Diff
+			System.out.println("Diffing for current changes");
+			List<Changeset> changeset = udp.parse(gc.getDiffJavaOnly(gc.getAllFiles()));
+			
+			analyzeChangeset(changeset);
+			
+			LockSupport.parkNanos((long)(Math.max(0, 
+				    startTime - System.currentTimeMillis()) * 1000000));
+		}
+	}
+	
+	public void runServer() {
+		long startTime = 0;
+		
+		// Get the current commit the call graph represents
 		String currentCommit = db.getCurrentCommit();
 		
 		for(;;) {
@@ -49,37 +67,35 @@ public class Daemon {
 				currentCommit = db.getCurrentCommit();
 			}
 			
-			//Diff
-			System.out.println("Diffing for current changes");
-			List<Changeset> changeset = udp.parse(gc.getDiffJavaOnly(gc.getAllFiles()));
-			
-			if(!changeset.isEmpty()) {
-				List<Pair<Method, Float>> changedMethods = getMethodsOfChangeset(changeset);
-				for(Pair<Method, Float> changedMethod: changedMethods) {
-					// Do something with the changed methods here
-					List<Method> callers = getCallers(changedMethod);
-					for(Method caller: callers) {
-						List<Pair<Method, Owner>> owners = blameCaller(caller);
-						for(Pair<Method, Owner> owner: owners) {
-							// Do something here with actual messaging
-							Message message = new Message(owner.getSecond().getEmail(), Resources.user, 
-									"Changed a function that impacted yours.", 
-									changedMethod.getFirst().toString(), 
-									owner.getFirst().toString());
-							MessageCenter mc = new MessageCenter();
-							if(Resources.email)
-								mc.sendAsEmail(message);
-							if(Resources.tweet)
-								mc.sendAsTweet(message);
-						}
-					}
-				}
-			}
-			
 			LockSupport.parkNanos((long)(Math.max(0, 
 				    startTime - System.currentTimeMillis()) * 1000000));
 		}
-		
+	}
+	
+	private void analyzeChangeset(List<Changeset> changeset) {
+		if(!changeset.isEmpty()) {
+			List<Pair<Method, Float>> changedMethods = getMethodsOfChangeset(changeset);
+			for(Pair<Method, Float> changedMethod: changedMethods) {
+				// Do something with the changed methods here
+				List<Method> callers = getCallers(changedMethod);
+				for(Method caller: callers) {
+					List<Pair<Method, Owner>> owners = blameCaller(caller);
+					for(Pair<Method, Owner> owner: owners) {
+						// Do something here with actual messaging
+						Message message = new Message(owner.getSecond().getEmail(), Resources.user,
+								changedMethod.getFirst().toString(), 
+								owner.getFirst().toString());
+						message.setWeight(owner.getSecond().getOwnership() *
+								changedMethod.getSecond());
+						MessageCenter mc = new MessageCenter(db);
+						if(Resources.email)
+							mc.sendAsEmail(message);
+						if(Resources.tweet)
+							mc.sendAsTweet(message);
+					}
+				}
+			}
+		}
 	}
 	
 	public void buildCallGraph() {

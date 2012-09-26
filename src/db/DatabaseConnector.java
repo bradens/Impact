@@ -8,6 +8,7 @@ import java.util.List;
 
 import twitter4j.auth.AccessToken;
 
+import models.Message;
 import models.Method;
 import models.Pair;
 
@@ -15,6 +16,7 @@ import db.util.ISetter;
 import db.util.ISetter.IntSetter;
 import db.util.PreparedStatementExecutionItem;
 import db.util.ISetter.StringSetter;
+import db.util.ISetter.FloatSetter;
 
 import impact.Resources;
 
@@ -192,6 +194,74 @@ public class DatabaseConnector extends DbConnection {
 		addExecutionItem(ei);
 		ei.waitUntilExecuted();
 	}
+	
+	public int getUserID(String email) {
+		try {
+			String sql = "SELECT * FROM users WHERE email=?"; 
+
+			ISetter[] params = {
+					new StringSetter(1, email)
+			};
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+			ResultSet rs = ei.getResult();
+			if(rs.next())
+				return rs.getInt("uid");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
+	public void insertMessage(Message message) {
+		int to = getUserID(message.getTo());
+		int from = getUserID(message.getFrom());
+		String query = "INSERT INTO messages (mid, uid_to, uid_from, m_changed, m_impacted, weight, impact_scale) VALUES " +
+				"(default, ?, ?, ?, ?, ?, ?)";
+		ISetter[] params = {
+				new IntSetter(1,to),
+				new IntSetter(2,from),
+				new StringSetter(3, message.getChange()),
+				new StringSetter(4, message.getImpacted()),
+				new FloatSetter(5, message.getWeight()),
+				new StringSetter(6, message.getImpactScale().toString())
+		};
+		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
+		addExecutionItem(ei);
+		ei.waitUntilExecuted();
+	}
+	
+	public int messageExists(Message message) {
+		int to = getUserID(message.getTo());
+		int from = getUserID(message.getFrom());
+		try {
+			String sql = "SELECT * FROM message WHERE " +
+					"uid_to=? AND uid_from=? AND m_changed=? AND m_impacted=? AND weight=? AND impact_scale=?"; 
+
+			ISetter[] params = {
+					new IntSetter(1,to),
+					new IntSetter(2,from),
+					new StringSetter(3, message.getChange()),
+					new StringSetter(4, message.getImpacted()),
+					new FloatSetter(5, message.getWeight()),
+					new StringSetter(6, message.getImpactScale().toString())
+			};
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(sql, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+			ResultSet rs = ei.getResult();
+			if(rs.next())
+				return rs.getInt("mid");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
 
 	/**
 	 * This method removes all information to deal with
@@ -287,16 +357,51 @@ public class DatabaseConnector extends DbConnection {
 	}
 	
 	public void updateProperties(String commit_id) {
-		String query = "INSERT INTO properties (repository, commit_id) VALUES " +
-				"(?, ?)";
-		ISetter[] params = {
-				new StringSetter(1,Resources.repository),
-				new StringSetter(2,commit_id)
-		};
+		if(!propertiesExist()) {
+			String query = "INSERT INTO properties (repository, commit_id) VALUES " +
+					"(?, ?)";
+			ISetter[] params = {
+					new StringSetter(1,Resources.repository),
+					new StringSetter(2,commit_id)
+			};
+	
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+		}
+		else {
+			String query = "UPDATE properties SET commit_id=? WHERE repository=?" +
+					"(?, ?)";
+			ISetter[] params = {
+					new StringSetter(1,commit_id),
+					new StringSetter(2,Resources.repository)
+			};
+	
+			PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
+			addExecutionItem(ei);
+			ei.waitUntilExecuted();
+		}
+	}
+	
+	private boolean propertiesExist() {
+		try {
+			String query = "SELECT * FROM properties WHERE repository=?";
+			ISetter[] params = {
+					new StringSetter(1,Resources.repository)
+			};
 
-		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
-		addExecutionItem(ei);
-		ei.waitUntilExecuted();
+			PreparedStatementExecutionItem eifirst = new PreparedStatementExecutionItem(query, params);
+			addExecutionItem(eifirst);
+			eifirst.waitUntilExecuted();
+			ResultSet rs = eifirst.getResult();
+
+			if(rs.next())
+				return true;
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 	public void deleteProperties() {

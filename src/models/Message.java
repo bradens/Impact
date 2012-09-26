@@ -1,5 +1,7 @@
 package models;
 
+import impact.Resources;
+
 public class Message {
 	
 	public enum MessageType {
@@ -10,9 +12,12 @@ public class Message {
 		METHOD, CLASS
 	}
 	
+	public enum ImpactScale {
+		HIGH, MED, LOW
+	}
+	
 	String to;
 	String from;
-	String message;
 	String change;
 	String impacted;
 	
@@ -20,39 +25,51 @@ public class Message {
 	
 	MessageType messageType;
 	ImpactType impactType;
-	public Message(String to, String from, String message, String change,
+	ImpactScale impactScale;
+	
+	public Message(String to, String from, String change,
 			String impacted) {
 		super();
 		this.to = to;
 		this.from = from;
-		this.message = message;
 		this.change = change;
 		this.impacted = impacted;
 	}
 	
-	public Message(String to, String from, String message, String change,
+	public Message(String to, String from, String change,
 			String impacted, float weight) {
 		super();
 		this.to = to;
 		this.from = from;
-		this.message = message;
 		this.change = change;
 		this.impacted = impacted;
 		this.weight = weight;
+		
+		initializeScale();
 	}
 
-	public Message(String to, String from, String message, String change,
+	public Message(String to, String from, String change,
 			String impacted, float weight, MessageType messageType,
 			ImpactType impactType) {
 		super();
 		this.to = to;
 		this.from = from;
-		this.message = message;
 		this.change = change;
 		this.impacted = impacted;
 		this.weight = weight;
 		this.messageType = messageType;
 		this.impactType = impactType;
+		
+		initializeScale();
+	}
+	
+	private void initializeScale() {
+		if(weight <= Resources.O_LOW)
+			impactScale = ImpactScale.LOW;
+		else if(weight > Resources.O_LOW && weight <= Resources.O_MED)
+			impactScale = ImpactScale.MED;
+		else
+			impactScale = ImpactScale.HIGH;
 	}
 
 	public String getTo() {
@@ -69,14 +86,6 @@ public class Message {
 
 	public void setFrom(String from) {
 		this.from = from;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
 	}
 
 	public String getChange() {
@@ -101,6 +110,8 @@ public class Message {
 
 	public void setWeight(float weight) {
 		this.weight = weight;
+		
+		initializeScale();
 	}
 
 	public MessageType getMessageType() {
@@ -117,6 +128,14 @@ public class Message {
 
 	public void setImpactType(ImpactType impactType) {
 		this.impactType = impactType;
+	}
+
+	public ImpactScale getImpactScale() {
+		return impactScale;
+	}
+
+	public void setImpactScale(ImpactScale impactScale) {
+		this.impactScale = impactScale;
 	}
 
 }
