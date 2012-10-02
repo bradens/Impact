@@ -7,6 +7,7 @@ import java.util.concurrent.locks.LockSupport;
 import messaging.MessageCenter;
 import models.Changeset;
 import models.Message;
+import models.Message.ImpactType;
 import models.Method;
 import models.Owner;
 import models.Pair;
@@ -75,6 +76,7 @@ public class Daemon {
 	private void analyzeChangeset(List<Changeset> changeset) {
 		if(!changeset.isEmpty()) {
 			List<Pair<Method, Float>> changedMethods = getMethodsOfChangeset(changeset);
+			List<Message> messages = new ArrayList<Message>();
 			for(Pair<Method, Float> changedMethod: changedMethods) {
 				// Do something with the changed methods here
 				List<Method> callers = getCallers(changedMethod);
@@ -87,14 +89,32 @@ public class Daemon {
 								owner.getFirst().toString());
 						message.setWeight(owner.getSecond().getOwnership() *
 								changedMethod.getSecond());
-						MessageCenter mc = new MessageCenter(db);
-						if(Resources.email)
-							mc.sendAsEmail(message);
-						if(Resources.tweet)
-							mc.sendAsTweet(message);
+						message.setImpactType(ImpactType.METHOD);
+						messages.add(message);
 					}
 				}
 			}
+			messages = preprocessMessages(messages);
+			processMessages(messages);
+		}
+	}
+	
+	private List<Message> preprocessMessages(List<Message> messages) {
+		List<Message> finalMessages = new ArrayList<Message>();
+		for(Message message: messages) {
+			if(!message.getTo().equals("not.committed.yet") && !db.messageHasBeenSent(message))
+				finalMessages.add(message);
+		}
+		return finalMessages;
+	}
+	
+	private void processMessages(List<Message> messages) {
+		MessageCenter mc = new MessageCenter(db);
+		for(Message message: messages) {
+			if(Resources.email)
+				mc.sendAsEmail(message);
+			if(Resources.tweet)
+				mc.sendAsTweet(message);
 		}
 	}
 	

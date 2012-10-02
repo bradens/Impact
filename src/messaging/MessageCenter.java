@@ -22,6 +22,7 @@ import twitter4j.auth.RequestToken;
 
 import models.Message;
 import models.Pair;
+import models.Message.MessageType;
 
 public class MessageCenter {
 	
@@ -32,6 +33,7 @@ public class MessageCenter {
 	}
 	
 	public void sendAsEmail(Message message) {
+		message.setMessageType(MessageType.EMAIL);
 		Properties prop = System.getProperties();
 		prop.setProperty("mail.smtp.host", "localhost");
 		Session session = Session.getDefaultInstance(prop);
@@ -44,7 +46,7 @@ public class MessageCenter {
 			mm.setText(generateEmailMessage(message));
 			
 			// Send
-			Transport.send(mm);
+			//Transport.send(mm);
 			confirmMessage(message);
 		}
 		catch (Exception e) {
@@ -53,6 +55,7 @@ public class MessageCenter {
 	}
 	
 	public void sendAsTweet(Message message) {
+		message.setMessageType(MessageType.TWEET);
 		AccessToken token = loadAccessToken();
 		if(token == null)
 			firstTweet(message);
@@ -63,6 +66,8 @@ public class MessageCenter {
 				Pair<String, String> config = loadTwitterConfig();
 				twitter.setOAuthConsumer(config.getFirst(), config.getSecond());
 			    twitter.setOAuthAccessToken(token);
+			    
+			    // Send
 			    //twitter.updateStatus(generateTweetMessage(message));
 			    confirmMessage(message);
 			}

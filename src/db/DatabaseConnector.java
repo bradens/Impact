@@ -219,15 +219,18 @@ public class DatabaseConnector extends DbConnection {
 	public void insertMessage(Message message) {
 		int to = getUserID(message.getTo());
 		int from = getUserID(message.getFrom());
-		String query = "INSERT INTO messages (mid, uid_to, uid_from, m_changed, m_impacted, weight, impact_scale) VALUES " +
-				"(default, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO messages (mid, uid_to, uid_from, m_changed, m_impacted, weight, " +
+				"message_type, impact_type, impact_scale) VALUES " +
+				"(default, ?, ?, ?, ?, ?, ?, ?, ?)";
 		ISetter[] params = {
 				new IntSetter(1,to),
 				new IntSetter(2,from),
 				new StringSetter(3, message.getChange()),
 				new StringSetter(4, message.getImpacted()),
 				new FloatSetter(5, message.getWeight()),
-				new StringSetter(6, message.getImpactScale().toString())
+				new StringSetter(6, message.getMessageType().toString()),
+				new StringSetter(7, message.getImpactType().toString()),
+				new StringSetter(8, message.getImpactScale().toString())
 		};
 		PreparedStatementExecutionItem ei = new PreparedStatementExecutionItem(query, params);
 		addExecutionItem(ei);
@@ -503,5 +506,31 @@ public class DatabaseConnector extends DbConnection {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public boolean messageHasBeenSent(Message message) {
+		try {
+			String query = "SELECT * FROM messages WHERE uid_to=? AND uid_from=? AND" +
+					" m_changed=? AND m_impacted=? AND impact_type=? AND impact_scale=?";
+			ISetter[] params = {
+					new IntSetter(1, getUserID(message.getTo())),
+					new IntSetter(2, getUserID(message.getFrom())),
+					new StringSetter(3, message.getChange()),
+					new StringSetter(4, message.getImpacted()),
+					new StringSetter(5, message.getImpactType().toString()),
+					new StringSetter(6, message.getImpactScale().toString())
+			};
+
+			PreparedStatementExecutionItem eifirst = new PreparedStatementExecutionItem(query, params);
+			addExecutionItem(eifirst);
+			eifirst.waitUntilExecuted();
+			ResultSet rs = eifirst.getResult();
+
+			return rs.next();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

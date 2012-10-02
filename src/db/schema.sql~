@@ -101,6 +101,8 @@ CREATE TABLE messages (
     m_changed character varying(255),
     m_impacted character varying(255),
     weight float,
+    message_type character varying(255),
+    impact_type character varying(255),
     impact_scale character varying(255)
 );
 
